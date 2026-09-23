@@ -1,0 +1,158 @@
+<section class="wizard">
+  <ol class="steps">
+    <li [class.active]="step() === 'vehicle'">1. Vehicle &amp; Repair</li>
+    <li [class.active]="step() === 'estimate'">2. Estimate</li>
+    <li [class.active]="step() === 'time'">3. Pick a Time</li>
+    <li [class.active]="step() === 'contact'">4. Confirm</li>
+  </ol>
+
+  @if (errorMessage()) {
+    <div class="alert">{{ errorMessage() }}</div>
+  }
+
+  <!-- Step 1: Vehicle + Repair -->
+  @if (step() === 'vehicle') {
+    <form class="card" [formGroup]="vehicleForm" (ngSubmit)="submitVehicleStep()">
+      <h2>Tell us about your vehicle</h2>
+
+      <div class="field-row">
+        <label>
+          Year
+          <select formControlName="year">
+            @for (year of years; track year) {
+              <option [value]="year">{{ year }}</option>
+            }
+          </select>
+        </label>
+
+        <label>
+          Make
+          <input formControlName="make" list="makes" placeholder="e.g. Honda" />
+          <datalist id="makes">
+            @for (make of commonMakes; track make) {
+              <option [value]="make"></option>
+            }
+          </datalist>
+        </label>
+
+        <label>
+          Model
+          <input formControlName="model" placeholder="e.g. Civic" />
+        </label>
+      </div>
+
+      <label class="full">
+        What does it need?
+        <select formControlName="repairKey">
+          <option value="" disabled>Select a repair&hellip;</option>
+          @for (repair of catalog()?.repairs ?? []; track repair.key) {
+            <option [value]="repair.key">{{ repair.label }}</option>
+          }
+        </select>
+      </label>
+
+      @if (isOtherRepair) {
+        <label class="full">
+          Describe the issue
+          <textarea
+            formControlName="freeformDescription"
+            rows="3"
+            placeholder="Tell us what's going on with your vehicle..."
+          ></textarea>
+        </label>
+      }
+
+      <button type="submit" class="btn" [disabled]="loading()">
+        {{ loading() ? 'Getting your estimate…' : 'Get My Estimate' }}
+      </button>
+    </form>
+  }
+
+  <!-- Step 2: Estimate -->
+  @if (step() === 'estimate' && estimate(); as est) {
+    <div class="card estimate-card">
+      <h2>Your Estimate</h2>
+      <p class="price-range">{{ est.totalLow | currency }} &ndash; {{ est.totalHigh | currency }}</p>
+      <p class="muted">Estimated time: about {{ est.estimatedHours }} hour(s)</p>
+      <p class="explanation">{{ est.explanation }}</p>
+      <p class="fine-print">
+        This is an AI-generated estimate based on typical jobs for this vehicle. Final pricing is confirmed
+        at the shop.
+      </p>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="backTo('vehicle')">Back</button>
+        <button type="button" class="btn" [disabled]="loading()" (click)="proceedToScheduling()">
+          {{ loading() ? 'Loading availability…' : 'Looks good — pick a time' }}
+        </button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 3: Pick a time -->
+  @if (step() === 'time') {
+    <div class="card">
+      <h2>Pick a Time</h2>
+      @if (slots().length === 0) {
+        <p class="muted">No open slots found in the next couple weeks. Please call us at (440) 336-3788.</p>
+      } @else {
+        @for (entry of slotsByDay() | keyvalue: originalOrder; track entry.key) {
+          <div class="day-group">
+            <h3>{{ entry.key }}</h3>
+            <div class="slot-grid">
+              @for (slot of entry.value; track slot.start.getTime()) {
+                <button type="button" class="slot-btn" (click)="selectSlot(slot)">{{ slot.label }}</button>
+              }
+            </div>
+          </div>
+        }
+      }
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="backTo('estimate')">Back</button>
+      </div>
+    </div>
+  }
+
+  <!-- Step 4: Contact + confirm -->
+  @if (step() === 'contact' && selectedSlot(); as slot) {
+    <form class="card" [formGroup]="contactForm" (ngSubmit)="confirmBooking()">
+      <h2>Confirm Your Appointment</h2>
+      <p class="summary">
+        <strong>{{ slot.dayLabel }} at {{ slot.label }}</strong><br />
+        {{ vehicleForm.controls.year.value }} {{ vehicleForm.controls.make.value }}
+        {{ vehicleForm.controls.model.value }}<br />
+        Estimated total: {{ estimate()?.totalLow | currency }} &ndash; {{ estimate()?.totalHigh | currency }}
+      </p>
+
+      <label class="full">
+        Full name
+        <input formControlName="customerName" />
+      </label>
+      <label class="full">
+        Phone or email
+        <input formControlName="customerContactInfo" placeholder="(440) 555-0100" />
+      </label>
+      <label class="full">
+        Address <span class="muted">(optional)</span>
+        <input formControlName="customerAddress" />
+      </label>
+
+      <div class="actions">
+        <button type="button" class="btn btn-secondary" (click)="backTo('time')">Back</button>
+        <button type="submit" class="btn" [disabled]="loading()">
+          {{ loading() ? 'Booking…' : 'Confirm Appointment' }}
+        </button>
+      </div>
+    </form>
+  }
+
+  <!-- Step 5: Success -->
+  @if (step() === 'success') {
+    <div class="card success-card">
+      <h2>You're all set!</h2>
+      <p>Your appointment request has been sent to Save My Ride. We'll see you soon.</p>
+      <p class="muted">Confirmation #{{ bookingResult()?.recordId }}</p>
+      <p class="muted">Questions? Call us at <a href="tel:14403363788">(440) 336-3788</a>.</p>
+    </div>
+  }
+</section>

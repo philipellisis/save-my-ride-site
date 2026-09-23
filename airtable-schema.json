@@ -1,0 +1,289 @@
+{
+  "tableId": "tblYCxdpiaxmnKreC",
+  "tableName": "Work",
+  "primaryFieldId": "fldwmf4eYsVyGrZkp",
+  "fields": [
+    {
+      "id": "fldwmf4eYsVyGrZkp",
+      "name": "AutoWorkID",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldBirxbsHfjCqSFe",
+      "name": "Notes",
+      "type": "multilineText"
+    },
+    {
+      "id": "fldsWEhOuZ7GUjtBR",
+      "name": "Worker",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldJ4oy1EQbcCuYHU",
+      "name": "State",
+      "type": "singleSelect",
+      "options": {
+        "choices": [
+          {
+            "id": "seltF9QSUVBxKm25f",
+            "name": "Done",
+            "color": "greenLight2"
+          },
+          {
+            "id": "seljSOZIDHAIo9NQO",
+            "name": "Pending",
+            "color": "blueLight2"
+          },
+          {
+            "id": "sel0IzWl5oJ0vnPvg",
+            "name": "In Progress",
+            "color": "cyanLight2"
+          },
+          {
+            "id": "sel8JWaiZgywj0nTS",
+            "name": "Paused",
+            "color": "tealLight2"
+          }
+        ]
+      }
+    },
+    {
+      "id": "fldtRZnGvNQOyXyAz",
+      "name": "StartTime",
+      "type": "formula",
+      "options": {
+        "isValid": true,
+        "formula": "CREATED_TIME()",
+        "referencedFieldIds": [],
+        "result": {
+          "type": "date",
+          "options": {
+            "dateFormat": {
+              "name": "us",
+              "format": "M/D/YYYY"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "fldeQzTNZRhneX0Pd",
+      "name": "ModifiedTime",
+      "type": "formula",
+      "options": {
+        "isValid": true,
+        "formula": "LAST_MODIFIED_TIME({fldJ4oy1EQbcCuYHU})",
+        "referencedFieldIds": [
+          "fldJ4oy1EQbcCuYHU"
+        ],
+        "result": {
+          "type": "date",
+          "options": {
+            "dateFormat": {
+              "name": "us",
+              "format": "M/D/YYYY"
+            }
+          }
+        }
+      }
+    },
+    {
+      "id": "fld5F1YB9yeiuqp2l",
+      "name": "QuotedAmount",
+      "type": "currency",
+      "options": {
+        "precision": 2,
+        "symbol": "$"
+      }
+    },
+    {
+      "id": "fldYtOozBmr3OZIXe",
+      "name": "LaborCost",
+      "type": "formula",
+      "options": {
+        "isValid": true,
+        "formula": "DATETIME_DIFF({fldtRZnGvNQOyXyAz},{fldeQzTNZRhneX0Pd},'hours')",
+        "referencedFieldIds": [
+          "fldtRZnGvNQOyXyAz",
+          "fldeQzTNZRhneX0Pd"
+        ],
+        "result": {
+          "type": "number",
+          "options": {
+            "precision": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "fld4JbnJwNiKTOKmL",
+      "name": "PartsCost",
+      "type": "currency",
+      "options": {
+        "precision": 2,
+        "symbol": "$"
+      }
+    },
+    {
+      "id": "fldnKAUkfuekNLpNa",
+      "name": "Paid",
+      "type": "checkbox",
+      "options": {
+        "icon": "check",
+        "color": "greenBright"
+      }
+    },
+    {
+      "id": "fldxZ7S83mWmbMWF8",
+      "name": "NetIncome",
+      "type": "formula",
+      "options": {
+        "isValid": true,
+        "formula": "{fld5F1YB9yeiuqp2l}-{fldYtOozBmr3OZIXe}-{fld4JbnJwNiKTOKmL}",
+        "referencedFieldIds": [
+          "fld5F1YB9yeiuqp2l",
+          "fldYtOozBmr3OZIXe",
+          "fld4JbnJwNiKTOKmL"
+        ],
+        "result": {
+          "type": "number",
+          "options": {
+            "precision": 0
+          }
+        }
+      }
+    },
+    {
+      "id": "fldyhVvLM7F88elWg",
+      "name": "CustomerName",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldKIIaVmj0hWnu1l",
+      "name": "CustomerAddress",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldeWNYoSEgJtGRi2",
+      "name": "CustomerContactInfo",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldQh1RSUqydw2OHO",
+      "name": "ScheduledWorkDate",
+      "type": "dateTime",
+      "options": {
+        "dateFormat": {
+          "name": "local",
+          "format": "l"
+        },
+        "timeFormat": {
+          "name": "12hour",
+          "format": "h:mma"
+        },
+        "timeZone": "client"
+      }
+    },
+    {
+      "id": "fldQJUgsZbghcyJHu",
+      "name": "QuotedHours",
+      "type": "number",
+      "options": {
+        "precision": 1
+      }
+    },
+    {
+      "id": "fldbW5B8yIA1naQ3U",
+      "name": "AccumulatedHours",
+      "type": "number",
+      "options": {
+        "precision": 1
+      }
+    },
+    {
+      "id": "flduIyAfiz1nerRlX",
+      "name": "ApprovalSignature",
+      "type": "multipleAttachments",
+      "options": {
+        "isReversed": false
+      }
+    },
+    {
+      "id": "fldoloANEA1rC0grj",
+      "name": "PickupSignature",
+      "type": "multipleAttachments",
+      "options": {
+        "isReversed": false
+      }
+    },
+    {
+      "id": "fld2kCGdIVUSEcORc",
+      "name": "License",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldyl3MbbiR8c8ijh",
+      "name": "Year",
+      "type": "number",
+      "options": {
+        "precision": 0
+      }
+    },
+    {
+      "id": "fldB5VmuKbfBufm8X",
+      "name": "Make",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldJ9ilmNZLl55grP",
+      "name": "Model",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldV69Ow3jv16O0Bc",
+      "name": "QuotedParts",
+      "type": "currency",
+      "options": {
+        "precision": 2,
+        "symbol": "$"
+      }
+    },
+    {
+      "id": "fldXjjm2Lg3rWLxKe",
+      "name": "ShopFee",
+      "type": "checkbox",
+      "options": {
+        "icon": "check",
+        "color": "greenBright"
+      }
+    },
+    {
+      "id": "fld331Ivj4VCljmoQ",
+      "name": "SquareCheckoutId",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fld1xHXQteeMnMnC3",
+      "name": "SquareCheckoutStatus",
+      "type": "singleLineText"
+    },
+    {
+      "id": "fldxqRNaPm3l5aMxU",
+      "name": "AmountPaid",
+      "type": "currency",
+      "options": {
+        "precision": 2,
+        "symbol": "$"
+      }
+    },
+    {
+      "id": "fldNuCFevBtUFuC4W",
+      "name": "TaxesPaid",
+      "type": "currency",
+      "options": {
+        "precision": 2,
+        "symbol": "$"
+      }
+    }
+  ]
+}

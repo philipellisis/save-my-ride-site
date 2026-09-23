@@ -1,0 +1,152 @@
+.wizard {
+  max-width: 640px;
+  margin: 2rem auto;
+  padding: 0 1.25rem 3rem;
+}
+
+.steps {
+  display: flex;
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.5rem;
+  gap: 0.5rem;
+  font-size: 0.8rem;
+  color: var(--color-muted);
+  flex-wrap: wrap;
+
+  li {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    background: var(--color-surface);
+    border: 1px solid var(--color-border);
+
+    &.active {
+      color: #fff;
+      background: var(--color-accent);
+      border-color: var(--color-accent);
+      font-weight: 600;
+    }
+  }
+}
+
+.alert {
+  background: #fdecea;
+  color: #922b21;
+  border: 1px solid #f5c6c1;
+  border-radius: 8px;
+  padding: 0.75rem 1rem;
+  margin-bottom: 1rem;
+}
+
+h2 {
+  margin-top: 0;
+}
+
+label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--color-text);
+
+  &.full {
+    margin-top: 1rem;
+  }
+}
+
+input,
+select,
+textarea {
+  font-size: 1rem;
+  padding: 0.6rem 0.7rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  font-family: inherit;
+  background: #fff;
+}
+
+.field-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 1rem;
+}
+
+.actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+button.btn {
+  margin-top: 1.5rem;
+}
+
+.estimate-card {
+  text-align: center;
+
+  .price-range {
+    font-size: 2rem;
+    font-weight: 700;
+    margin: 0.5rem 0 0;
+  }
+
+  .explanation {
+    text-align: left;
+    background: var(--color-bg);
+    border-radius: 8px;
+    padding: 1rem;
+    margin-top: 1rem;
+    line-height: 1.5;
+  }
+
+  .fine-print {
+    font-size: 0.8rem;
+    color: var(--color-muted);
+  }
+}
+
+.day-group {
+  margin-bottom: 1.25rem;
+
+  h3 {
+    font-size: 0.95rem;
+    margin-bottom: 0.5rem;
+  }
+}
+
+.slot-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 0.5rem;
+}
+
+.slot-btn {
+  padding: 0.5rem;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: #fff;
+  cursor: pointer;
+  font-size: 0.9rem;
+
+  &:hover {
+    border-color: var(--color-accent);
+    color: var(--color-accent);
+  }
+}
+
+.summary {
+  background: var(--color-bg);
+  border-radius: 8px;
+  padding: 1rem;
+  line-height: 1.6;
+}
+
+.success-card {
+  text-align: center;
+}
+
+.muted {
+  color: var(--color-muted);
+}

@@ -1,0 +1,282 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: Save My Ride — booking API, static site hosting, and CDN.
+
+Parameters:
+  AirtableApiKey:
+    Type: String
+    NoEcho: true
+    Description: Airtable personal access token used to read/write the Work table.
+  AirtableBaseId:
+    Type: String
+    Description: Airtable base id (e.g. appXXXXXXXXXXXXXX).
+  AirtableTableId:
+    Type: String
+    Description: Airtable table id for the Work table (e.g. tblXXXXXXXXXXXXXX).
+  BedrockModelId:
+    Type: String
+    Default: moonshotai.kimi-k2.5
+    Description: >-
+      Bedrock model id / inference profile used for repair estimates. Swappable at any time —
+      update this default (or pass --parameter-overrides BedrockModelId=... to sam deploy, or
+      BEDROCK_MODEL_ID in .env for local dev) without touching any code. Verify the exact id and
+      that model access is enabled in the Bedrock console before deploying.
+  DomainName:
+    Type: String
+    Default: save-my-ride.com
+    Description: Canonical domain served by CloudFront.
+  WwwDomainName:
+    Type: String
+    Default: www.save-my-ride.com
+    Description: www alias also covered by the ACM certificate and CloudFront.
+
+Globals:
+  Function:
+    Runtime: nodejs20.x
+    Architectures: [arm64]
+    MemorySize: 256
+    Timeout: 10
+    Environment:
+      Variables:
+        AIRTABLE_API_KEY: !Ref AirtableApiKey
+        AIRTABLE_AUTOWORK_BASE_ID: !Ref AirtableBaseId
+        AIRTABLE_AUTOWORK_TABLE_ID: !Ref AirtableTableId
+        TABLE_NAME: !Ref AppointmentsTable
+
+Resources:
+  # ---------- Data ----------
+  AppointmentsTable:
+    Type: AWS::DynamoDB::Table
+    Properties:
+      TableName: !Sub '${AWS::StackName}-appointments'
+      BillingMode: PAY_PER_REQUEST
+      AttributeDefinitions:
+        - AttributeName: PK
+          AttributeType: S
+        - AttributeName: SK
+          AttributeType: S
+        - AttributeName: GSI1PK
+          AttributeType: S
+        - AttributeName: GSI1SK
+          AttributeType: S
+      KeySchema:
+        - AttributeName: PK
+          KeyType: HASH
+        - AttributeName: SK
+          KeyType: RANGE
+      GlobalSecondaryIndexes:
+        - IndexName: ScheduleIndex
+          KeySchema:
+            - AttributeName: GSI1PK
+              KeyType: HASH
+            - AttributeName: GSI1SK
+              KeyType: RANGE
+          Projection:
+            ProjectionType: ALL
+      TimeToLiveSpecification:
+        AttributeName: expiresAt
+        Enabled: true
+
+  # ---------- API ----------
+  # CORS (including preflight OPTIONS) is handled inside each Lambda (backend/src/lib/http.ts),
+  # not via HttpApi's CorsConfiguration — `sam local start-api` doesn't emulate API Gateway's
+  # built-in CORS handling, so keeping it all in Lambda code keeps local dev and prod consistent.
+  HttpApi:
+    Type: AWS::Serverless::HttpApi
+
+  GetScheduleFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: false
+        EntryPoints:
+          - src/handlers/get-schedule.ts
+    Properties:
+      CodeUri: backend/
+      # esbuild bundles a single entry point down to a flat file at the build root (no
+      # src/handlers/ nesting preserved) — the Handler must match that flat output name.
+      Handler: get-schedule.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /schedule
+            Method: get
+        Preflight:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /schedule
+            Method: options
+
+  EstimateRepairFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: false
+        EntryPoints:
+          - src/handlers/estimate-repair.ts
+    Properties:
+      CodeUri: backend/
+      Handler: estimate-repair.handler
+      Timeout: 30
+      Environment:
+        Variables:
+          BEDROCK_MODEL_ID: !Ref BedrockModelId
+      Policies:
+        - Statement:
+            - Effect: Allow
+              Action: bedrock:InvokeModel
+              Resource:
+                - !Sub 'arn:aws:bedrock:${AWS::Region}::foundation-model/*'
+                - !Sub 'arn:aws:bedrock:${AWS::Region}:${AWS::AccountId}:inference-profile/*'
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /estimate
+            Method: post
+        Preflight:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /estimate
+            Method: options
+
+  CreateBookingFunction:
+    Type: AWS::Serverless::Function
+    Metadata:
+      BuildMethod: esbuild
+      BuildProperties:
+        Minify: true
+        Target: es2022
+        Sourcemap: false
+        EntryPoints:
+          - src/handlers/create-booking.ts
+    Properties:
+      CodeUri: backend/
+      Handler: create-booking.handler
+      Policies:
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
+      Events:
+        Api:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /bookings
+            Method: post
+        Preflight:
+          Type: HttpApi
+          Properties:
+            ApiId: !Ref HttpApi
+            Path: /bookings
+            Method: options
+
+  # ---------- Static site hosting ----------
+  SiteBucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketEncryption:
+        ServerSideEncryptionConfiguration:
+          - ServerSideEncryptionByDefault:
+              SSEAlgorithm: AES256
+      PublicAccessBlockConfiguration:
+        BlockPublicAcls: true
+        BlockPublicPolicy: true
+        IgnorePublicAcls: true
+        RestrictPublicBuckets: true
+
+  SiteBucketPolicy:
+    Type: AWS::S3::BucketPolicy
+    Properties:
+      Bucket: !Ref SiteBucket
+      PolicyDocument:
+        Statement:
+          - Effect: Allow
+            Principal:
+              Service: cloudfront.amazonaws.com
+            Action: s3:GetObject
+            Resource: !Sub '${SiteBucket.Arn}/*'
+            Condition:
+              StringEquals:
+                AWS:SourceArn: !Sub 'arn:aws:cloudfront::${AWS::AccountId}:distribution/${CloudFrontDistribution}'
+
+  CloudFrontOriginAccessControl:
+    Type: AWS::CloudFront::OriginAccessControl
+    Properties:
+      OriginAccessControlConfig:
+        Name: !Sub '${AWS::StackName}-oac'
+        OriginAccessControlOriginType: s3
+        SigningBehavior: always
+        SigningProtocol: sigv4
+
+  SiteCertificate:
+    Type: AWS::CertificateManager::Certificate
+    Properties:
+      DomainName: !Ref DomainName
+      SubjectAlternativeNames:
+        - !Ref WwwDomainName
+      ValidationMethod: DNS
+
+  CloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Enabled: true
+        DefaultRootObject: index.html
+        Aliases:
+          - !Ref DomainName
+          - !Ref WwwDomainName
+        ViewerCertificate:
+          AcmCertificateArn: !Ref SiteCertificate
+          SslSupportMethod: sni-only
+          MinimumProtocolVersion: TLSv1.2_2021
+        Origins:
+          - Id: SiteBucketOrigin
+            DomainName: !GetAtt SiteBucket.RegionalDomainName
+            OriginAccessControlId: !Ref CloudFrontOriginAccessControl
+            S3OriginConfig:
+              OriginAccessIdentity: ''
+        DefaultCacheBehavior:
+          TargetOriginId: SiteBucketOrigin
+          ViewerProtocolPolicy: redirect-to-https
+          AllowedMethods: [GET, HEAD]
+          CachedMethods: [GET, HEAD]
+          Compress: true
+          CachePolicyId: 658327ea-f89d-4fab-a63d-7e88639e58f6 # AWS managed CachingOptimized
+        CustomErrorResponses:
+          - ErrorCode: 403
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+          - ErrorCode: 404
+            ResponseCode: 200
+            ResponsePagePath: /index.html
+
+Outputs:
+  ApiUrl:
+    Description: Base URL of the booking API (put this into frontend/src/assets/config.json).
+    Value: !Sub 'https://${HttpApi}.execute-api.${AWS::Region}.amazonaws.com'
+  SiteBucketName:
+    Description: S3 bucket to sync the Angular build into.
+    Value: !Ref SiteBucket
+  CloudFrontDistributionId:
+    Description: Distribution id, used to invalidate the cache after a deploy.
+    Value: !Ref CloudFrontDistribution
+  CloudFrontDomainName:
+    Description: Point Cloudflare DNS (CNAME) at this hostname.
+    Value: !GetAtt CloudFrontDistribution.DomainName
+  CertificateValidationHint:
+    Description: If the stack is stuck CREATE_IN_PROGRESS on first deploy, check the ACM console for the DNS validation CNAME and add it in Cloudflare.
+    Value: !Ref SiteCertificate

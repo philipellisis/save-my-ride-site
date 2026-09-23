@@ -1,0 +1,22 @@
+# Secrets / local env
+.env
+env.json
+
+# Node
+node_modules/
+npm-debug.log*
+
+# Angular
+frontend/dist/
+frontend/.angular/
+
+# SAM
+.aws-sam/
+samconfig.local.toml
+
+# Backend build output
+backend/dist/
+
+# OS/editor
+.DS_Store
+Thumbs.db

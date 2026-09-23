@@ -1,0 +1,19 @@
+version = 0.1
+
+[default.build.parameters]
+cached = true
+parallel = true
+
+[default.deploy.parameters]
+stack_name = "savemyride-website"
+region = "us-east-1"
+capabilities = "CAPABILITY_IAM"
+confirm_changeset = true
+resolve_s3 = true
+image_repositories = []
+s3_prefix = "savemyride-website"
+disable_rollback = true
+parameter_overrides = "AirtableBaseId=\"apprcJfYV7qaQnVGh\" AirtableTableId=\"tblYCxdpiaxmnKreC\" BedrockModelId=\"moonshotai.kimi-k2.5\" DomainName=\"save-my-ride.com\" WwwDomainName=\"www.save-my-ride.com\""
+
+[default.global.parameters]
+region = "us-east-1"

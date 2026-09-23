@@ -1,0 +1,25 @@
+{
+  "shopRatePerHour": 120,
+  "repairs": [
+    { "key": "oil-change", "label": "Oil Change", "baselineHours": 0.5 },
+    { "key": "brake-pads", "label": "Brake Pads (Front or Rear)", "baselineHours": 1.5 },
+    { "key": "brake-pads-rotors", "label": "Brake Pads & Rotors", "baselineHours": 2 },
+    { "key": "battery-replacement", "label": "Battery Replacement", "baselineHours": 0.3 },
+    { "key": "alternator-replacement", "label": "Alternator Replacement", "baselineHours": 2 },
+    { "key": "starter-replacement", "label": "Starter Replacement", "baselineHours": 2 },
+    { "key": "water-pump", "label": "Water Pump Replacement", "baselineHours": 3 },
+    { "key": "timing-belt", "label": "Timing Belt Replacement", "baselineHours": 4 },
+    { "key": "serpentine-belt", "label": "Serpentine Belt Replacement", "baselineHours": 1 },
+    { "key": "spark-plugs", "label": "Spark Plug Replacement", "baselineHours": 1.5 },
+    { "key": "radiator-replacement", "label": "Radiator Replacement", "baselineHours": 2.5 },
+    { "key": "wheel-bearing", "label": "Wheel Bearing Replacement", "baselineHours": 2 },
+    { "key": "tire-rotation", "label": "Tire Rotation", "baselineHours": 0.5 },
+    { "key": "struts-suspension", "label": "Struts / Suspension Repair", "baselineHours": 2.5 },
+    { "key": "exhaust-repair", "label": "Exhaust Repair", "baselineHours": 2 },
+    { "key": "transmission-fluid", "label": "Transmission Fluid Service", "baselineHours": 1 },
+    { "key": "coolant-flush", "label": "Coolant Flush", "baselineHours": 1 },
+    { "key": "ac-recharge", "label": "A/C Recharge / Repair", "baselineHours": 1.5 },
+    { "key": "check-engine-diagnostic", "label": "Check Engine Light Diagnostic", "baselineHours": 1 },
+    { "key": "other", "label": "Other (describe below)", "baselineHours": null }
+  ]
+}

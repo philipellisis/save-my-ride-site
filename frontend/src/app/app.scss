@@ -1,0 +1,45 @@
+.site-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.5rem;
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+
+  .brand img {
+    height: 48px;
+    display: block;
+  }
+
+  .cta {
+    background: var(--color-accent);
+    color: #fff;
+    padding: 0.6rem 1.25rem;
+    border-radius: 999px;
+    font-weight: 600;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+}
+
+main {
+  min-height: calc(100vh - 160px);
+}
+
+.site-footer {
+  text-align: center;
+  padding: 1.5rem 1rem 2rem;
+  color: var(--color-muted);
+  font-size: 0.9rem;
+
+  a {
+    color: var(--color-muted);
+  }
+
+  p {
+    margin: 0.25rem 0;
+  }
+}
