@@ -32,7 +32,7 @@ Parameters:
 
 Globals:
   Function:
-    Runtime: nodejs20.x
+    Runtime: nodejs24.x
     Architectures: [arm64]
     MemorySize: 256
     Timeout: 10
@@ -47,6 +47,8 @@ Resources:
   # ---------- Data ----------
   AppointmentsTable:
     Type: AWS::DynamoDB::Table
+    DeletionPolicy: Retain
+    UpdateReplacePolicy: Retain
     Properties:
       TableName: !Sub '${AWS::StackName}-appointments'
       BillingMode: PAY_PER_REQUEST
@@ -134,6 +136,10 @@ Resources:
         Variables:
           BEDROCK_MODEL_ID: !Ref BedrockModelId
       Policies:
+        # Needed for the quote cache (getCachedQuote/saveQuote) and the hourly AI rate limiter,
+        # both of which live in the same DynamoDB table as appointments.
+        - DynamoDBCrudPolicy:
+            TableName: !Ref AppointmentsTable
         - Statement:
             - Effect: Allow
               Action: bedrock:InvokeModel

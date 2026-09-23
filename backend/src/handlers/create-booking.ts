@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto';
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from 'aws-lambda';
 import { createWorkRecord } from '../lib/airtable-client';
 import { putAppointment, queryFutureAppointments } from '../lib/dynamo';
@@ -52,7 +53,11 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       `Estimated: ${estimatedHours}h labor, parts $${body.estimate!.partsCostLow}-$${body.estimate!.partsCostHigh}, total $${body.estimate!.totalLow}-$${body.estimate!.totalHigh}`,
     ].join('\n');
 
+    const quotedParts =
+      Math.round(((body.estimate!.partsCostLow + body.estimate!.partsCostHigh) / 2) * 100) / 100;
+
     const recordId = await createWorkRecord({
+      AutoWorkID: randomUUID(),
       CustomerName: body.customerName!,
       CustomerContactInfo: body.customerContactInfo!,
       CustomerAddress: body.customerAddress,
@@ -61,6 +66,7 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       Model: body.model!,
       ScheduledWorkDate: body.scheduledWorkDate!,
       QuotedHours: estimatedHours,
+      QuotedParts: quotedParts,
       QuotedAmount: Math.round(((body.estimate!.totalLow + body.estimate!.totalHigh) / 2) * 100) / 100,
       State: 'Pending',
       Notes: notes,

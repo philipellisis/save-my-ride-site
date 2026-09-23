@@ -69,6 +69,7 @@ export async function listFutureWorkRecords(): Promise<AirtableRecord<FutureWork
 }
 
 export interface CreateWorkFields {
+  AutoWorkID: string;
   CustomerName: string;
   CustomerContactInfo: string;
   CustomerAddress?: string;
@@ -77,6 +78,7 @@ export interface CreateWorkFields {
   Model: string;
   ScheduledWorkDate: string;
   QuotedHours: number;
+  QuotedParts: number;
   QuotedAmount: number;
   State: 'Pending';
   Notes: string;

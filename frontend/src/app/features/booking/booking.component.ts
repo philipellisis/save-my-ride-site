@@ -1,5 +1,6 @@
 import { Component, OnInit, computed, inject, signal } from '@angular/core';
 import { CurrencyPipe, KeyValuePipe } from '@angular/common';
+import { RouterLink } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ApiService } from '../../core/api.service';
 import { RepairCatalogService } from '../../core/repair-catalog.service';
@@ -16,7 +17,7 @@ export const COMMON_MAKES = [
 
 @Component({
   selector: 'app-booking',
-  imports: [ReactiveFormsModule, CurrencyPipe, KeyValuePipe],
+  imports: [ReactiveFormsModule, CurrencyPipe, KeyValuePipe, RouterLink],
   templateUrl: './booking.component.html',
   styleUrl: './booking.component.scss',
 })

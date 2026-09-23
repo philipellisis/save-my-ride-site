@@ -1,8 +1,11 @@
 import type { APIGatewayProxyEventV2, APIGatewayProxyHandlerV2 } from 'aws-lambda';
-import { getRepairEstimate } from '../lib/bedrock';
+import { getAiRepairEstimate } from '../lib/bedrock';
 import { findRepair, repairCatalog } from '../lib/repair-catalog';
+import { computeEstimate, fallbackEstimate } from '../lib/estimate-math';
+import { getCachedQuote, saveQuote } from '../lib/quote-cache';
+import { isWithinAiRateLimit } from '../lib/rate-limiter';
 import { isPreflight, jsonResponse, preflightResponse } from '../lib/http';
-import type { EstimateRequestBody } from '../types/domain';
+import type { EstimateRequestBody, RawRepairEstimate, RepairCatalogEntry } from '../types/domain';
 
 export const handler: APIGatewayProxyHandlerV2 = async (event) => {
   if (isPreflight(event)) return preflightResponse(event);
@@ -22,15 +25,16 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
       return badRequest(event, 'freeformDescription is required when repairKey is "other"');
     }
 
-    const estimate = await getRepairEstimate({
+    const quoteKey = {
       year: body.year,
       make: body.make,
       model: body.model,
-      repairLabel: repair.label,
-      baselineHours: repair.baselineHours,
+      repairKey: body.repairKey,
       freeformDescription: body.freeformDescription,
-      shopRatePerHour: repairCatalog.shopRatePerHour,
-    });
+    };
+
+    const raw = await getRawEstimate(quoteKey, repair);
+    const estimate = computeEstimate(raw, repairCatalog.shopRatePerHour);
 
     return jsonResponse(event, 200, estimate);
   } catch (err) {
@@ -38,6 +42,48 @@ export const handler: APIGatewayProxyHandlerV2 = async (event) => {
     return jsonResponse(event, 500, { message: 'Failed to generate estimate' });
   }
 };
+
+async function getRawEstimate(
+  quoteKey: {
+    year: number;
+    make: string;
+    model: string;
+    repairKey: string;
+    freeformDescription?: string;
+  },
+  repair: RepairCatalogEntry
+): Promise<RawRepairEstimate> {
+  const cached = await getCachedQuote(quoteKey);
+  if (cached) {
+    return cached;
+  }
+
+  let raw: RawRepairEstimate;
+
+  const withinBudget = await isWithinAiRateLimit();
+  if (!withinBudget) {
+    console.warn('Hourly AI rate limit reached, using standard shop pricing instead');
+    raw = fallbackEstimate(repair);
+  } else {
+    try {
+      raw = await getAiRepairEstimate({
+        year: quoteKey.year,
+        make: quoteKey.make,
+        model: quoteKey.model,
+        repairLabel: repair.label,
+        baselineHours: repair.baselineHours,
+        freeformDescription: quoteKey.freeformDescription,
+        shopRatePerHour: repairCatalog.shopRatePerHour,
+      });
+    } catch (err) {
+      console.error('Bedrock estimate failed, using standard shop pricing instead', err);
+      raw = fallbackEstimate(repair);
+    }
+  }
+
+  await saveQuote(quoteKey, raw);
+  return raw;
+}
 
 function badRequest(event: APIGatewayProxyEventV2, message: string) {
   return jsonResponse(event, 400, { message });

@@ -8,9 +8,9 @@ import {
 } from '@aws-sdk/lib-dynamodb';
 import type { BusyInterval } from '../types/domain';
 
-const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
+export const client = DynamoDBDocumentClient.from(new DynamoDBClient({}));
 
-function tableName(): string {
+export function tableName(): string {
   const name = process.env.TABLE_NAME;
   if (!name) throw new Error('Missing TABLE_NAME env var');
   return name;

@@ -1,12 +1,23 @@
 export interface RepairCatalogEntry {
   key: string;
   label: string;
-  baselineHours: number | null;
+  baselineHours: number;
+  defaultPartsCostLow: number;
+  defaultPartsCostHigh: number;
 }
 
 export interface RepairCatalog {
   shopRatePerHour: number;
   repairs: RepairCatalogEntry[];
+}
+
+/** Hours/parts only — no dollar amounts baked in, so costs can always be recomputed against the
+ * CURRENT shop rate (see estimate-math.ts). This is what gets cached and what Bedrock/fallback produce. */
+export interface RawRepairEstimate {
+  estimatedHours: number;
+  partsCostLow: number;
+  partsCostHigh: number;
+  explanation: string;
 }
 
 export interface BusyInterval {
